@@ -1,0 +1,39 @@
+# Build output
+build/
+out/
+target/
+bin/
+*.class
+
+# Gradle
+.gradle/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.swp
+.eclipse/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets — never commit
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Client jars, decompiled dumps and scratch analysis
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+decompiled/
+jars/
+run/
+logs/
