@@ -4,9 +4,9 @@ import dev.venti.config.NumberSetting;
 import dev.venti.module.Module;
 import dev.venti.module.ModuleCategory;
 import java.util.Locale;
-import net.minecraft.class_2561;
-import net.minecraft.class_310;
-import net.minecraft.class_1657;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 
 /** Warns in chat once your health drops below a threshold, with a cooldown so it does not spam. */
 public final class LowHealthModule extends Module {
@@ -28,17 +28,17 @@ public final class LowHealthModule extends Module {
 
     @Override
     protected void onTick() {
-        class_310 mc = class_310.method_1551();
-        class_1657 player = mc.field_1724;
-        if (player == null || !player.method_5805()) {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        PlayerEntity player = mc.player;
+        if (player == null || !player.isAlive()) {
             return;
         }
-        float health = player.method_6032();
+        float health = player.getHealth();
         boolean low = health > 0.0f && health <= this.threshold.get();
         long now = System.currentTimeMillis();
         if (low && (!this.wasLow || now - this.lastWarning >= (long)(this.cooldown.get() * 1000.0f))) {
             this.lastWarning = now;
-            this.chat(class_2561.method_43470(String.format(Locale.ROOT, "low health: %.1f", health)));
+            this.chat(Text.literal(String.format(Locale.ROOT, "low health: %.1f", health)));
         }
         this.wasLow = low;
     }

@@ -6,8 +6,9 @@ import dev.venti.config.NumberSetting;
 import dev.venti.module.Module;
 import dev.venti.module.ModuleCategory;
 import dev.venti.module.Modules;
-import net.minecraft.class_1297;
-import net.minecraft.class_1657;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 
 /**
  * Draws a name tag above nearby players.
@@ -36,7 +37,7 @@ public final class NameTagsModule extends Module {
         return module != null && module.isEnabled() ? module : null;
     }
 
-    public static boolean shouldRender(class_1297 entity) {
+    public static boolean shouldRender(Entity entity) {
         NameTagsModule module = active();
         return module != null && module.visible(entity);
     }
@@ -74,20 +75,20 @@ public final class NameTagsModule extends Module {
      * consider in the first place (a live, loaded, visible player), and it has to be inside the
      * configured distance. Everything else is left to the vanilla renderer's own depth test.
      */
-    private boolean visible(class_1297 entity) {
-        if (!(entity instanceof class_1657 player)) {
+    private boolean visible(Entity entity) {
+        if (!(entity instanceof PlayerEntity player)) {
             return false;
         }
-        if (!player.method_5805() || player.method_31481() || player.method_5767()) {
+        if (!player.isAlive() || player.isRemoved() || player.isInvisible()) {
             return false;
         }
-        var self = net.minecraft.class_310.method_1551().field_1724;
-        if (player == self) {
+        PlayerEntity self = MinecraftClient.getInstance().player;
+        if (self == null || player == self) {
             return false;
         }
-        double dx = player.method_23317() - self.method_23317();
-        double dy = player.method_23318() - self.method_23318();
-        double dz = player.method_23321() - self.method_23321();
+        double dx = player.getX() - self.getX();
+        double dy = player.getY() - self.getY();
+        double dz = player.getZ() - self.getZ();
         double limit = this.maxDistance.get();
         return dx * dx + dy * dy + dz * dz <= limit * limit;
     }
