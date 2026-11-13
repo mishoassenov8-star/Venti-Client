@@ -4,7 +4,9 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
-    "NametagRendererMixin"
+    "NametagRendererMixin",
+    "FullbrightLightmapMixin",
+    "TimeChangerClientWorldMixin"
   ],
   "injectors": {
     "defaultRequire": 1
