@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "dev.venti.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [],
+  "client": [
+    "NametagRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

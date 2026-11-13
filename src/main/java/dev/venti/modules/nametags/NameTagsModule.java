@@ -42,6 +42,20 @@ public final class NameTagsModule extends Module {
         return module != null && module.visible(entity);
     }
 
+    /**
+     * Mixin hook for {@code EntityRenderer#hasLabel}. Returns true only when the vanilla label
+     * must be suppressed: the module is on, the entity is a player, and that player fails the
+     * module's own visibility rule. Non-players and a disabled module return false, so vanilla
+     * behaviour is untouched.
+     */
+    public static boolean shouldHide(Entity entity) {
+        NameTagsModule module = active();
+        if (module == null || !(entity instanceof PlayerEntity)) {
+            return false;
+        }
+        return !module.visible(entity);
+    }
+
     public float scale() {
         return this.scale.get();
     }
