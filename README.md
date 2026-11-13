@@ -3,8 +3,7 @@
 Private workspace for Venti Client modules. Nothing in this repository is published.
 
 This is a **buildable Fabric mod**: the module/settings framework recovered from the shipped
-client and modules written for Venti. It now ships mixins too, so
-modules that need to hook Minecraft rendering or state can be ported.
+client, modules written for Venti, and three mixins.
 
 ## Build
 
@@ -20,7 +19,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.5.0.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.6.0.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -57,19 +56,23 @@ Other modules:
 | Weather Notifier | Misc | Chat warning when it starts or stops raining, with a 20-tick debounce so a flickering server does not spam you, plus an optional chime |
 | Sprint | Misc | Keeps you sprinting while you move forward — only while moving forward, not using an item, not sneaking. Same behaviour as vanilla Toggle Sprint |
 | Coord Snapper | Misc | Copies the block you look at, or the one you stand on, to the clipboard. Looked At / Own Position targets, 16-512 range, Stop at Fluids, three formats and a dimension suffix. **Never uploads anything** |
+| Fullbright | Render | Gamma setting 1-16, default 8, with a 1.0 floor — it brightens, never dims. Raises the gamma argument inside the lightmap update with core Mixin's `@ModifyArg` |
+| Time Changer | Render | -20000..20000 client-only override via `@Redirect` on `Properties#setTimeOfDay`. The server clock and other players are untouched; disabling writes the last server time back |
 
 ## Mixins
 
-One config, one mixin, `defaultRequire: 1` so a target that stops matching fails loudly:
+One config, three mixins, `defaultRequire: 1` so a target that stops matching fails loudly:
 
-| Path | What it does |
+| Mixin | Target |
 | --- | --- |
-| `src/main/resources/venti.mixins.json` | Mixin config, registered from `fabric.mod.json` |
-| `src/main/java/dev/venti/mixin/NametagRendererMixin.java` | Cancels `EntityRenderer#hasLabel` for players that fail the Name Tags rule |
+| `NametagRendererMixin` | `EntityRenderer#hasLabel` — cancels labels for players that fail the Name Tags rule |
+| `FullbrightLightmapMixin` | `LightmapTextureManager#update` — raises the gamma argument |
+| `TimeChangerClientWorldMixin` | `ClientWorld#setTime` — substitutes the forced time-of-day |
 
-Loom remaps the annotations during `remapJar`, so **no refmap is needed**: in the built jar the
-target is `class_897` and the method is `method_3921`. `docs/wiring.md` shows how to check that
-and how to add another mixin.
+Loom remaps the annotations during `remapJar`, so **no refmap is needed**. Verified in the
+built jar: `class_897/method_3921`, `class_765/method_3313` and
+`class_638/method_29089` targeting `class_638$class_5271.method_165`. `docs/wiring.md` shows
+the `javap` command to re-check and the recipe for adding another mixin.
 
 ## Layout
 
@@ -78,9 +81,9 @@ and how to add another mixin.
 | `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them |
 | `src/main/java/dev/venti/module/` | `Module`, `ModuleCategory`, `Modules` — the framework, reconstructed from the jar |
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
-| `src/main/java/dev/venti/mixin/` | Mixins |
-| `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement` |
-| `docs/wiring.md` | Mixin setup and the nametag gate |
+| `src/main/java/dev/venti/mixin/` | The three mixins |
+| `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement`, `render` |
+| `docs/wiring.md` | Mixin setup, the nametag gate, how to add a mixin |
 | `docs/recovered-api.md` | The framework API as it exists in the shipped jar |
 | `tools/intermediary_to_yarn.py` | The one-shot renamer used to convert the decompiled intermediary names to Yarn |
 
@@ -93,8 +96,8 @@ translates the exact set of members this code touches, and is safe to run again.
 
 ## Status
 
-`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and the mixin is remapped into
-the jar. None of it has been run in a Minecraft client yet.
+`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and all three mixins are
+remapped into the jar. None of it has been run in a Minecraft client yet.
 
 ## Deliberately not included
 
