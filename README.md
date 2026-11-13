@@ -19,7 +19,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.3.1.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.4.0.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -55,6 +55,8 @@ Other modules:
 | --- | --- | --- |
 | Weather Notifier | Misc | Chat warning when it starts or stops raining, with a 20-tick debounce so a flickering server does not spam you, plus an optional chime |
 | Sprint | Misc | Keeps you sprinting while you move forward — only while moving forward, not using an item, not sneaking. Same behaviour as vanilla Toggle Sprint |
+| Auto Jump | Misc | `Jump` / `LowHop` modes and an `Always` / `Walking` / `Sprinting` gate, applied on the client tick |
+| Coord Snapper | Misc | Copies the block you look at, or the one you stand on, to the clipboard. Looked At / Own Position targets, 16-512 range, Stop at Fluids, three formats and a dimension suffix. **Never uploads anything** |
 
 ## Layout
 
@@ -87,3 +89,7 @@ and will not be added here. Combat/aura modules, ESP/Xray and flight are also ou
 
 Auto Reconnect was ported in 0.3.0 and removed again at the owner's request; it is not part
 of the mod.
+
+This repo does not post your coordinates anywhere. Coord Snapper copies to the clipboard and
+stops there: a keypress that silently sends your position off the machine is not something it
+will do.
