@@ -19,7 +19,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.3.0.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.3.1.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -55,7 +55,6 @@ Other modules:
 | --- | --- | --- |
 | Weather Notifier | Misc | Chat warning when it starts or stops raining, with a 20-tick debounce so a flickering server does not spam you, plus an optional chime |
 | Sprint | Misc | Keeps you sprinting while you move forward — only while moving forward, not using an item, not sneaking. Same behaviour as vanilla Toggle Sprint |
-| Auto Reconnect | Misc | Same countdown button on the disconnect screen and the same ban/blacklist guard. Clears the saved server on the title screen so a deliberate quit is not undone |
 
 ## Layout
 
@@ -64,7 +63,7 @@ Other modules:
 | `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them |
 | `src/main/java/dev/venti/module/` | `Module`, `ModuleCategory`, `Modules` — the framework, reconstructed from the jar |
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
-| `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement`, `reconnect` |
+| `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement` |
 | `docs/wiring.md` | How the nametag hook goes into your own renderer |
 | `docs/recovered-api.md` | The framework API as it exists in the shipped jar |
 | `tools/intermediary_to_yarn.py` | The one-shot renamer used to convert the decompiled intermediary names to Yarn |
@@ -85,3 +84,6 @@ Minecraft client yet.
 
 Target ESP, auto eat, legit auto tool, goliath RTP, chat spam and chat macros are not ported
 and will not be added here. Combat/aura modules, ESP/Xray and flight are also out.
+
+Auto Reconnect was ported in 0.3.0 and removed again at the owner's request; it is not part
+of the mod.
