@@ -4,7 +4,6 @@ import dev.venti.module.Modules;
 import dev.venti.modules.coords.CoordSnapperModule;
 import dev.venti.modules.coords.CopyCoordsModule;
 import dev.venti.modules.health.LowHealthModule;
-import dev.venti.modules.movement.AutoJumpModule;
 import dev.venti.modules.movement.SprintModule;
 import dev.venti.modules.nametags.NameTagsModule;
 import dev.venti.modules.weather.WeatherNotifierModule;
@@ -21,7 +20,6 @@ public final class VentiMod implements ClientModInitializer {
         Modules.register(new LowHealthModule());
         Modules.register(new WeatherNotifierModule());
         Modules.register(new SprintModule());
-        Modules.register(new AutoJumpModule());
         Modules.register(new CoordSnapperModule());
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> Modules.startAll());
