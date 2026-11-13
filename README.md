@@ -3,7 +3,8 @@
 Private workspace for Venti Client modules. Nothing in this repository is published.
 
 This is a **buildable Fabric mod**: the module/settings framework recovered from the shipped
-client, plus modules written for Venti.
+client and modules written for Venti. It now ships mixins too, so
+modules that need to hook Minecraft rendering or state can be ported.
 
 ## Build
 
@@ -19,7 +20,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.4.1.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.5.0.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -45,7 +46,7 @@ Written for Venti:
 
 | Module | Category | What it does |
 | --- | --- | --- |
-| Name Tags | Render | Vanilla-style tags for nearby players, drawn only by the depth-tested vanilla label pass — never through walls |
+| Name Tags | Render | Vanilla-style tags for nearby players, gated through the shipped `EntityRenderer#hasLabel` mixin, so a tag is drawn only by the depth-tested vanilla pass — never through walls |
 | Copy Coords | Misc | Clipboard dump of your position, then switches itself off |
 | Low Health | Misc | Chat warning with a cooldown |
 
@@ -57,6 +58,19 @@ Other modules:
 | Sprint | Misc | Keeps you sprinting while you move forward — only while moving forward, not using an item, not sneaking. Same behaviour as vanilla Toggle Sprint |
 | Coord Snapper | Misc | Copies the block you look at, or the one you stand on, to the clipboard. Looked At / Own Position targets, 16-512 range, Stop at Fluids, three formats and a dimension suffix. **Never uploads anything** |
 
+## Mixins
+
+One config, one mixin, `defaultRequire: 1` so a target that stops matching fails loudly:
+
+| Path | What it does |
+| --- | --- |
+| `src/main/resources/venti.mixins.json` | Mixin config, registered from `fabric.mod.json` |
+| `src/main/java/dev/venti/mixin/NametagRendererMixin.java` | Cancels `EntityRenderer#hasLabel` for players that fail the Name Tags rule |
+
+Loom remaps the annotations during `remapJar`, so **no refmap is needed**: in the built jar the
+target is `class_897` and the method is `method_3921`. `docs/wiring.md` shows how to check that
+and how to add another mixin.
+
 ## Layout
 
 | Path | What it is |
@@ -64,8 +78,9 @@ Other modules:
 | `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them |
 | `src/main/java/dev/venti/module/` | `Module`, `ModuleCategory`, `Modules` — the framework, reconstructed from the jar |
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
+| `src/main/java/dev/venti/mixin/` | Mixins |
 | `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement` |
-| `docs/wiring.md` | How the nametag hook goes into your own renderer |
+| `docs/wiring.md` | Mixin setup and the nametag gate |
 | `docs/recovered-api.md` | The framework API as it exists in the shipped jar |
 | `tools/intermediary_to_yarn.py` | The one-shot renamer used to convert the decompiled intermediary names to Yarn |
 
@@ -78,8 +93,8 @@ translates the exact set of members this code touches, and is safe to run again.
 
 ## Status
 
-`build` succeeds: `compileJava`, `jar` and `remapJar` all pass. None of it has been run in a
-Minecraft client yet.
+`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and the mixin is remapped into
+the jar. None of it has been run in a Minecraft client yet.
 
 ## Deliberately not included
 
