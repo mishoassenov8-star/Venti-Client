@@ -6,6 +6,13 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
+/**
+ * Substitutes the time-of-day written into the client's own world properties.
+ *
+ * <p>{@code @Redirect} on the {@code Properties#setTimeOfDay} call means the client keeps sending
+ * and receiving normal time updates, and only the value written into its own world properties is
+ * replaced. The server's clock, scoreboard time and everything other players see are untouched.</p>
+ */
 @Mixin(ClientWorld.class)
 public abstract class TimeChangerClientWorldMixin {
     @Redirect(
