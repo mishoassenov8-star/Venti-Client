@@ -8,9 +8,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.world.ClientWorld;
 
 /**
- * <p>Same client-only time override in the -20000..20000 range, and the same idea: catch the
- * server's time update and substitute the forced value, so the server keeps its own clock and
- * nothing about it changes server-side. The interception is in
+ * Client-only time override in the -20000..20000 range.
+ *
+ * <p>Catches the server's time update and substitutes the forced value, so the server keeps its
+ * own clock and nothing about it changes server-side. The interception is in
  * {@code TimeChangerClientWorldMixin}.</p>
  *
  * <p>When the module turns off, the last server time it saw is written back, so the world

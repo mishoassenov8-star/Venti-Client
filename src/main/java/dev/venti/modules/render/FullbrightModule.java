@@ -6,8 +6,9 @@ import dev.venti.module.ModuleCategory;
 import dev.venti.module.Modules;
 
 /**
- * <p>Same single setting and the same 1.0 floor: it brightens the client lightmap gamma and
- * never dims it below vanilla. The work happens in {@code FullbrightLightmapMixin}, which
+ * Brightens the client lightmap gamma and never dims it below vanilla.
+ *
+ * <p>One setting and a 1.0 floor. The work happens in {@code FullbrightLightmapMixin}, which
  * raises the gamma argument inside {@code LightmapTextureManager#update}.</p>
  */
 public final class FullbrightModule extends Module {
