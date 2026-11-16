@@ -6,7 +6,9 @@
   "client": [
     "NametagRendererMixin",
     "FullbrightLightmapMixin",
-    "TimeChangerClientWorldMixin"
+    "TimeChangerClientWorldMixin",
+    "GameRendererFovMixin",
+    "LivingEntitySwingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

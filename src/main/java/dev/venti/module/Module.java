@@ -3,9 +3,9 @@ package dev.venti.module;
 import dev.venti.config.BooleanSetting;
 import dev.venti.config.Setting;
 import dev.venti.config.Settings;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.text.Text;
+import net.minecraft.client.MinecraftClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +18,7 @@ public abstract class Module {
     private final ModuleCategory category;
     private final Settings settings;
     private final BooleanSetting notifications;
+    private boolean hold;
     private boolean running;
 
     protected Module(String id, String name, String description, ModuleCategory category) {
@@ -61,7 +62,27 @@ public abstract class Module {
         return this.settings.enabled;
     }
 
+    /** A hold module is on only while its bind is held; it is never saved or announced. */
+    public final boolean hold() {
+        return this.hold;
+    }
+
+    protected final void setHold(boolean hold) {
+        this.hold = hold;
+    }
+
+    final void setHeld(boolean held) {
+        if (this.settings.enabled == held) {
+            return;
+        }
+        this.settings.enabled = held;
+        this.sync();
+    }
+
     public final void setEnabled(boolean enabled) {
+        if (this.hold) {
+            return;
+        }
         if (this.settings.enabled == enabled) {
             return;
         }
