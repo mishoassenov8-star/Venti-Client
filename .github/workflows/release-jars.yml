@@ -1,0 +1,63 @@
+name: attach release jars
+
+# Builds every tagged version from its own source and attaches the resulting jars
+# to the matching GitHub release. Releases are created by hand; this only adds assets.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/release-jars.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  jar:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tag:
+          - v0.2.0
+          - v0.3.0
+          - v0.3.1
+          - v0.4.0
+          - v0.4.1
+          - v0.5.0
+          - v0.6.0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.tag }}
+
+      - name: JDK 21 (mod toolchain)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: JDK 25 (Gradle runtime, required by Loom)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Gradle 9.9.1
+        run: |
+          curl -sSL -o /tmp/gradle.zip https://services.gradle.org/distributions/gradle-9.9.1-bin.zip
+          unzip -q /tmp/gradle.zip -d "$HOME"
+
+      - name: Build ${{ matrix.tag }}
+        run: |
+          JAVA_HOME="$JAVA_HOME_25_X64" "$HOME/gradle-9.9.1/bin/gradle" build \
+            --console=plain --no-daemon \
+            -Porg.gradle.java.installations.paths="$JAVA_HOME_21_X64"
+
+      - name: Attach jars to the ${{ matrix.tag }} release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ matrix.tag }}
+          files: build/libs/*.jar
+          fail_on_unmatched_files: true
