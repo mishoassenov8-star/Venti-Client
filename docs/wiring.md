@@ -17,7 +17,9 @@ One config, `src/main/resources/venti.mixins.json`, registered from `fabric.mod.
   "client": [
     "NametagRendererMixin",
     "FullbrightLightmapMixin",
-    "TimeChangerClientWorldMixin"
+    "TimeChangerClientWorldMixin",
+    "GameRendererFovMixin",
+    "LivingEntitySwingMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }
@@ -31,20 +33,28 @@ Loom handles the annotation processor and the remap. **No refmap is needed**: du
 | `NametagRendererMixin` | `class_897`, method `method_3921` |
 | `FullbrightLightmapMixin` | `class_765`, method `method_3313` |
 | `TimeChangerClientWorldMixin` | `class_638`, method `method_29089`, redirecting `class_638$class_5271.method_165(J)V` |
+| `GameRendererFovMixin` | `class_757`, method `method_3196` |
+| `LivingEntitySwingMixin` | `class_1309`, method `method_6028` |
 
 Check it yourself with:
 
 ```bash
-javap -v -p -classpath build/libs/venti-client-0.6.0.jar dev.venti.mixin.FullbrightLightmapMixin \
+javap -v -p -classpath build/libs/venti-client-0.7.0.jar dev.venti.mixin.FullbrightLightmapMixin \
   | grep -E 'method=\[|value=\[|target=\['
 ```
 
 To add a mixin: drop it in `dev.venti.mixin`, list it under `client` in `venti.mixins.json`,
 keep `defaultRequire: 1` so a target that stops matching fails loudly, and build.
 
-**Core Mixin only.** Fullbright and Time Changer are wired with core Mixin (`@ModifyArg`,
-`@Redirect`) rather than MixinExtras, so no extra dependency is needed and the annotation
-processor stays the default one.
+**Core Mixin only.** Every hook is core Mixin (`@ModifyArg`, `@Redirect`, `@Inject` with
+`cancellable = true`) rather than MixinExtras, so no extra dependency is needed and the
+annotation processor stays the default one.
+
+## Hold binds
+
+A module can be a hold bind instead of a toggle: `setHold(true)` in the constructor, and
+`Modules#tick` then keeps it enabled only while the bind is down and no screen is open. Holds do
+not save to the config and do not print a chat line. Zoom is the only one so far.
 
 ## Name tag gate
 
@@ -89,6 +99,19 @@ rather than brightening some other value.
 The client keeps receiving normal time updates; only the value written into its own world
 properties is substituted. The server clock, the scoreboard and what other players see are
 untouched. Disabling writes the last server time back.
+
+## Field of view and swing
+
+```java
+@Inject(method = "getFov", at = @At("RETURN"), cancellable = true)
+private void venti$applyFov(Camera camera, float tickDelta, boolean changingFov,
+                            CallbackInfoReturnable<Float> cir) {
+```
+
+`getFov` is the one place the world projection's field of view comes from, so both Custom FOV
+and Zoom rewrite that single return value instead of re-deriving the projection. The panorama
+passes are skipped. `LivingEntitySwingMixin` does the same for `getHandSwingDuration`, and only
+when the entity is the local player.
 
 ## Registering modules
 
