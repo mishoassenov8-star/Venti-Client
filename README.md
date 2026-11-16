@@ -107,7 +107,7 @@ and will not be added here. Combat/aura modules, ESP/Xray and flight are also ou
 Auto Reconnect was ported in 0.3.0 and removed again at the owner's request; it is not part
 of the mod.
 
-Movement automation is out as well: Auto Jump was ported in 0.4.0 and removed, and Auto Walk,
+Movement automation is out as well:
 Auto Clicker, Fast Use, No Jump Delay, Fly, Speed and similar are not ported. They play the
 game for you rather than showing you something about it.
 
