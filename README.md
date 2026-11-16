@@ -27,6 +27,25 @@ If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unu
 ./gradlew build -Porg.gradle.java.installations.paths=/path/to/jdk-21
 ```
 
+## Releases
+
+Don't want to build it yourself? Every version is tagged and has a release with a prebuilt jar:
+
+| Version | Jar | What it is |
+| --- | --- | --- |
+| v0.6.0 | `venti-client-0.6.0.jar` | latest — Fullbright and Time Changer |
+| v0.5.0 | `venti-client-0.5.0.jar` | first mixin, Name Tags via the vanilla label pass |
+| v0.4.1 | `venti-client-0.4.1.jar` | Auto Jump removed |
+| v0.4.0 | `venti-client-0.4.0.jar` | Coord Snapper |
+| v0.3.1 | `venti-client-0.3.1.jar` | Auto Reconnect removed |
+| v0.3.0 | `venti-client-0.3.0.jar` | Weather Notifier, Sprint |
+| v0.2.0 | `venti-client-0.2.0.jar` | first buildable jar |
+| v0.1.0 | — | source only: predates the Gradle project, so there was never a jar |
+
+Each release also carries a `-sources.jar` and GitHub's own Source code (zip)/(tar.gz) for that
+tag. The jars are built by `.github/workflows/release-jars.yml`, which checks out the tagged
+commit and attaches its output, so the jar and the source on a release always belong together.
+
 ## Versions
 
 | | |
@@ -83,6 +102,7 @@ the `javap` command to re-check and the recipe for adding another mixin.
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
 | `src/main/java/dev/venti/mixin/` | The three mixins |
 | `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement`, `render` |
+| `.github/workflows/release-jars.yml` | Rebuilds each tag and attaches its jars to the release |
 | `docs/wiring.md` | Mixin setup, the nametag gate, how to add a mixin |
 | `docs/recovered-api.md` | The framework API as it exists in the shipped jar |
 | `tools/intermediary_to_yarn.py` | The one-shot renamer used to convert the decompiled intermediary names to Yarn |
@@ -107,7 +127,7 @@ and will not be added here. Combat/aura modules, ESP/Xray and flight are also ou
 Auto Reconnect was ported in 0.3.0 and removed again at the owner's request; it is not part
 of the mod.
 
-Movement automation is out as well:
+Movement automation is out as well: Auto Jump was ported in 0.4.0 and removed, and Auto Walk,
 Auto Clicker, Fast Use, No Jump Delay, Fly, Speed and similar are not ported. They play the
 game for you rather than showing you something about it.
 
