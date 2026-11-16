@@ -109,6 +109,7 @@ the `javap` command to re-check and the recipe for adding another mixin.
 
 ## Provenance
 
+The framework and settings classes were reconstructed from the shipped `venti.jar`
 (decompiled with CFR 0.152; 263 classes → 133 source files). The decompiled tree is not
 committed. Decompiled code references Minecraft through intermediary names (`class_310`,
 `method_1551`), while a Fabric project compiles against Yarn — `tools/intermediary_to_yarn.py`
