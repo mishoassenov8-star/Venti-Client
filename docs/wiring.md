@@ -19,7 +19,8 @@ One config, `src/main/resources/venti.mixins.json`, registered from `fabric.mod.
     "FullbrightLightmapMixin",
     "TimeChangerClientWorldMixin",
     "GameRendererFovMixin",
-    "LivingEntitySwingMixin"
+    "LivingEntitySwingMixin",
+    "BlockOverlayOutlineMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }
@@ -35,19 +36,20 @@ Loom handles the annotation processor and the remap. **No refmap is needed**: du
 | `TimeChangerClientWorldMixin` | `class_638`, method `method_29089`, redirecting `class_638$class_5271.method_165(J)V` |
 | `GameRendererFovMixin` | `class_757`, method `method_3196` |
 | `LivingEntitySwingMixin` | `class_1309`, method `method_6028` |
+| `BlockOverlayOutlineMixin` | `class_761`, method `method_62210`, rewriting args of `method_22712(Lnet/minecraft/class_4587;Lnet/minecraft/class_4588;DDDLnet/minecraft/class_12074;IF)V` |
 
 Check it yourself with:
 
 ```bash
-javap -v -p -classpath build/libs/venti-client-0.7.0.jar dev.venti.mixin.FullbrightLightmapMixin \
+javap -v -p -classpath build/libs/venti-client-0.8.0.jar dev.venti.mixin.FullbrightLightmapMixin \
   | grep -E 'method=\[|value=\[|target=\['
 ```
 
 To add a mixin: drop it in `dev.venti.mixin`, list it under `client` in `venti.mixins.json`,
 keep `defaultRequire: 1` so a target that stops matching fails loudly, and build.
 
-**Core Mixin only.** Every hook is core Mixin (`@ModifyArg`, `@Redirect`, `@Inject` with
-`cancellable = true`) rather than MixinExtras, so no extra dependency is needed and the
+**Core Mixin only.** Every hook is core Mixin (`@ModifyArg`, `@ModifyArgs`, `@Redirect`, `@Inject`
+with `cancellable = true`) rather than MixinExtras, so no extra dependency is needed and the
 annotation processor stays the default one.
 
 ## Hold binds
@@ -100,18 +102,19 @@ The client keeps receiving normal time updates; only the value written into its 
 properties is substituted. The server clock, the scoreboard and what other players see are
 untouched. Disabling writes the last server time back.
 
-## Field of view and swing
+## Block Overlay
 
 ```java
-@Inject(method = "getFov", at = @At("RETURN"), cancellable = true)
-private void venti$applyFov(Camera camera, float tickDelta, boolean changingFov,
-                            CallbackInfoReturnable<Float> cir) {
+@ModifyArgs(method = "renderTargetBlockOutline",
+        at = @At(value = "INVOKE",
+                 target = "Lnet/minecraft/client/render/WorldRenderer;drawBlockOutline(...)V",
+                 ordinal = 1))
 ```
 
-`getFov` is the one place the world projection's field of view comes from, so both Custom FOV
-and Zoom rewrite that single return value instead of re-deriving the projection. The panorama
-passes are skipped. `LivingEntitySwingMixin` does the same for `getHandSwingDuration`, and only
-when the entity is the local player.
+Vanilla calls `drawBlockOutline` twice from `renderTargetBlockOutline`: the high-contrast pass
+(ordinal 0) and the normal one (ordinal 1). Only the normal call has its colour and line-width
+arguments replaced, so the high-contrast pass keeps its own colours. The shape, the line layer
+and the depth test stay vanilla's, which is why this can never outline a block through a wall.
 
 ## Registering modules
 
