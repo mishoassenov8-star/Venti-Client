@@ -9,7 +9,8 @@
     "TimeChangerClientWorldMixin",
     "GameRendererFovMixin",
     "LivingEntitySwingMixin",
-    "BlockOverlayOutlineMixin"
+    "BlockOverlayOutlineMixin",
+    "InGameHudCrosshairMixin"
   ],
   "injectors": {
     "defaultRequire": 1
