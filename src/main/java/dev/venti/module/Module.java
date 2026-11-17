@@ -19,6 +19,7 @@ public abstract class Module {
     private final Settings settings;
     private final BooleanSetting notifications;
     private boolean hold;
+    private Runnable bindAction;
     private boolean running;
 
     protected Module(String id, String name, String description, ModuleCategory category) {
@@ -71,6 +72,15 @@ public abstract class Module {
         this.hold = hold;
     }
 
+    /** A bind action replaces the toggle: pressing the bind runs it instead of switching the module. */
+    protected final void setBindAction(Runnable action) {
+        this.bindAction = action;
+    }
+
+    public final boolean hasBindAction() {
+        return this.bindAction != null;
+    }
+
     final void setHeld(boolean held) {
         if (this.settings.enabled == held) {
             return;
@@ -113,6 +123,12 @@ public abstract class Module {
         if (this.running) {
             this.running = false;
             this.safely("shut down", this::onDisable);
+        }
+    }
+
+    final void runBindAction() {
+        if (this.bindAction != null) {
+            this.safely("bind action", this.bindAction);
         }
     }
 

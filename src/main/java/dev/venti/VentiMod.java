@@ -8,6 +8,7 @@ import dev.venti.modules.misc.SlowSwingModule;
 import dev.venti.modules.movement.SprintModule;
 import dev.venti.modules.nametags.NameTagsModule;
 import dev.venti.modules.render.BlockOverlayModule;
+import dev.venti.modules.render.CrosshairModule;
 import dev.venti.modules.render.CustomFovModule;
 import dev.venti.modules.render.FullbrightModule;
 import dev.venti.modules.render.TimeChangerModule;
@@ -18,6 +19,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 
 /** Registers the modules and keeps them ticking, the same way the shipped client does. */
@@ -37,11 +39,19 @@ public final class VentiMod implements ClientModInitializer {
         Modules.register(new SlowSwingModule());
         Modules.register(new BlockOverlayModule());
         Modules.register(new WaypointsModule());
+        Modules.register(new CrosshairModule());
 
         HudElementRegistry.addLast(Identifier.of("venti", "waypoints"), (context, tickCounter) -> {
             WaypointsModule module = WaypointsModule.active();
             if (module != null) {
                 module.render(context, tickCounter);
+            }
+        });
+
+        HudElementRegistry.addLast(Identifier.of("venti", "crosshair"), (context, tickCounter) -> {
+            CrosshairModule module = CrosshairModule.active();
+            if (module != null && MinecraftClient.getInstance().currentScreen == null) {
+                module.render(context);
             }
         });
 

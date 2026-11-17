@@ -53,7 +53,11 @@ public final class Modules {
             Module module = ALL.get(i);
             int key = module.settings().bind;
             boolean down = key > 0 && GLFW.glfwGetKey(window, key) == GLFW.GLFW_PRESS;
-            if (module.hold()) {
+            if (module.hasBindAction()) {
+                if (down && !bindDown[i] && acceptBinds) {
+                    module.runBindAction();
+                }
+            } else if (module.hold()) {
                 module.setHeld(down && acceptBinds);
             } else if (down && !bindDown[i] && acceptBinds) {
                 module.toggle();
