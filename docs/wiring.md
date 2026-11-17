@@ -41,7 +41,7 @@ Loom handles the annotation processor and the remap. **No refmap is needed**: du
 Check it yourself with:
 
 ```bash
-javap -v -p -classpath build/libs/venti-client-0.8.0.jar dev.venti.mixin.FullbrightLightmapMixin \
+javap -v -p -classpath build/libs/venti-client-0.9.0.jar dev.venti.mixin.FullbrightLightmapMixin \
   | grep -E 'method=\[|value=\[|target=\['
 ```
 
@@ -115,6 +115,23 @@ Vanilla calls `drawBlockOutline` twice from `renderTargetBlockOutline`: the high
 (ordinal 0) and the normal one (ordinal 1). Only the normal call has its colour and line-width
 arguments replaced, so the high-contrast pass keeps its own colours. The shape, the line layer
 and the depth test stay vanilla's, which is why this can never outline a block through a wall.
+
+## HUD elements
+
+Waypoints has no mixin: it registers a Fabric HUD element from `VentiMod` instead.
+
+```java
+HudElementRegistry.addLast(Identifier.of("venti", "waypoints"), (context, tickCounter) -> {
+    WaypointsModule module = WaypointsModule.active();
+    if (module != null) {
+        module.render(context, tickCounter);
+    }
+});
+```
+
+`HudElementRegistry` is the current API (`HudRenderCallback` is the deprecated one); `addLast`
+puts the element above vanilla's own HUD. The module projects each waypoint with the camera's
+yaw, pitch and FOV, and skips anything behind the camera, so nothing is drawn at a wrong place.
 
 ## Registering modules
 
