@@ -3,7 +3,7 @@
 Private workspace for Venti Client modules. Nothing in this repository is published.
 
 This is a **buildable Fabric mod**: the module/settings framework recovered from the shipped
-client, modules written for Venti, and five mixins.
+client, modules written for Venti, and six mixins.
 
 ## Build
 
@@ -19,7 +19,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.7.0.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.8.0.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -33,7 +33,8 @@ Don't want to build it yourself? Every version is tagged and has a release with 
 
 | Version | Jar | What it is |
 | --- | --- | --- |
-| v0.7.0 | `venti-client-0.7.0.jar` | latest — Zoom, Custom FOV and Slow Swing |
+| v0.8.0 | `venti-client-0.8.0.jar` | latest — Block Overlay |
+| v0.7.0 | `venti-client-0.7.0.jar` | Zoom, Custom FOV and Slow Swing |
 | v0.6.0 | `venti-client-0.6.0.jar` | Fullbright and Time Changer |
 | v0.5.0 | `venti-client-0.5.0.jar` | first mixin, Name Tags via the vanilla label pass |
 | v0.4.1 | `venti-client-0.4.1.jar` | Auto Jump removed |
@@ -81,10 +82,11 @@ Other modules:
 | Zoom | Render | Hold-to-zoom on `C`, 1.5-20x with an eased factor. A hold bind, so it is on only while the key is down and nothing is written to the config |
 | Custom FOV | Render | Fixed field of view, 30-160, substituted for vanilla's value. Chunk meshes are rebuilt when it changes or is switched off |
 | Slow Swing | Misc | Hand swing speed 0.1-2.0, local player only. Changes the animation duration only — no packets, no reach, no combat timing |
+| Block Overlay | Render | Recolours and thickens vanilla's selection outline: colour, 1-6px width and an optional alpha pulse. Reuses the vanilla outline pass, so it stays depth tested |
 
 ## Mixins
 
-One config, five mixins, `defaultRequire: 1` so a target that stops matching fails loudly:
+One config, six mixins, `defaultRequire: 1` so a target that stops matching fails loudly:
 
 | Mixin | Target |
 | --- | --- |
@@ -93,11 +95,13 @@ One config, five mixins, `defaultRequire: 1` so a target that stops matching fai
 | `TimeChangerClientWorldMixin` | `ClientWorld#setTime` — substitutes the forced time-of-day |
 | `GameRendererFovMixin` | `GameRenderer#getFov` — substitutes the FOV and divides it by the zoom factor |
 | `LivingEntitySwingMixin` | `LivingEntity#getHandSwingDuration` — scales the local player's swing |
+| `BlockOverlayOutlineMixin` | `WorldRenderer#renderTargetBlockOutline` — rewrites the colour and width args of the normal `drawBlockOutline` call |
 
 Loom remaps the annotations during `remapJar`, so **no refmap is needed**. Verified in the
 built jar: `class_897/method_3921`, `class_765/method_3313`,
-`class_638/method_29089` targeting `class_638$class_5271.method_165`, `class_757/method_3196`
-and `class_1309/method_6028`. `docs/wiring.md` shows
+`class_638/method_29089` targeting `class_638$class_5271.method_165`, `class_757/method_3196`,
+`class_1309/method_6028`, and
+`class_761/method_62210` calling `method_22712`. `docs/wiring.md` shows
 the `javap` command to re-check and the recipe for adding another mixin.
 
 ## Layout
@@ -107,7 +111,7 @@ the `javap` command to re-check and the recipe for adding another mixin.
 | `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them |
 | `src/main/java/dev/venti/module/` | `Module`, `ModuleCategory`, `Modules` — the framework, reconstructed from the jar |
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
-| `src/main/java/dev/venti/mixin/` | The five mixins |
+| `src/main/java/dev/venti/mixin/` | The six mixins |
 | `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement`, `misc`, `render` |
 | `.github/workflows/release-jars.yml` | Rebuilds each tag and attaches its jars to the release |
 | `docs/wiring.md` | Mixin setup, the nametag gate, how to add a mixin |
@@ -124,7 +128,7 @@ translates the exact set of members this code touches, and is safe to run again.
 
 ## Status
 
-`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and all five mixins are
+`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and all six mixins are
 remapped into the jar. None of it has been run in a Minecraft client yet.
 
 ## Deliberately not included
