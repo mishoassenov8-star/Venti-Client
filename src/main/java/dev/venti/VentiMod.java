@@ -7,6 +7,7 @@ import dev.venti.modules.health.LowHealthModule;
 import dev.venti.modules.misc.SlowSwingModule;
 import dev.venti.modules.movement.SprintModule;
 import dev.venti.modules.nametags.NameTagsModule;
+import dev.venti.modules.render.BlockOverlayModule;
 import dev.venti.modules.render.CustomFovModule;
 import dev.venti.modules.render.FullbrightModule;
 import dev.venti.modules.render.TimeChangerModule;
@@ -31,6 +32,7 @@ public final class VentiMod implements ClientModInitializer {
         Modules.register(new ZoomModule());
         Modules.register(new CustomFovModule());
         Modules.register(new SlowSwingModule());
+        Modules.register(new BlockOverlayModule());
 
         ClientLifecycleEvents.CLIENT_STARTED.register(client -> Modules.startAll());
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> Modules.stopAll());
