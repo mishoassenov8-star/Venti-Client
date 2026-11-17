@@ -20,7 +20,8 @@ One config, `src/main/resources/venti.mixins.json`, registered from `fabric.mod.
     "TimeChangerClientWorldMixin",
     "GameRendererFovMixin",
     "LivingEntitySwingMixin",
-    "BlockOverlayOutlineMixin"
+    "BlockOverlayOutlineMixin",
+    "InGameHudCrosshairMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }
@@ -37,11 +38,12 @@ Loom handles the annotation processor and the remap. **No refmap is needed**: du
 | `GameRendererFovMixin` | `class_757`, method `method_3196` |
 | `LivingEntitySwingMixin` | `class_1309`, method `method_6028` |
 | `BlockOverlayOutlineMixin` | `class_761`, method `method_62210`, rewriting args of `method_22712(Lnet/minecraft/class_4587;Lnet/minecraft/class_4588;DDDLnet/minecraft/class_12074;IF)V` |
+| `InGameHudCrosshairMixin` | `class_329`, method `method_1736` |
 
 Check it yourself with:
 
 ```bash
-javap -v -p -classpath build/libs/venti-client-0.9.0.jar dev.venti.mixin.FullbrightLightmapMixin \
+javap -v -p -classpath build/libs/venti-client-0.10.0.jar dev.venti.mixin.FullbrightLightmapMixin \
   | grep -E 'method=\[|value=\[|target=\['
 ```
 
@@ -116,22 +118,46 @@ Vanilla calls `drawBlockOutline` twice from `renderTargetBlockOutline`: the high
 arguments replaced, so the high-contrast pass keeps its own colours. The shape, the line layer
 and the depth test stay vanilla's, which is why this can never outline a block through a wall.
 
-## HUD elements
+## Bind actions
 
-Waypoints has no mixin: it registers a Fabric HUD element from `VentiMod` instead.
+A module can spend its bind on an action instead of a toggle:
 
 ```java
-HudElementRegistry.addLast(Identifier.of("venti", "waypoints"), (context, tickCounter) -> {
-    WaypointsModule module = WaypointsModule.active();
-    if (module != null) {
-        module.render(context, tickCounter);
+this.setBindAction(this::openEditor);
+```
+
+`Modules#tick` then runs the action on the key edge and never changes `enabled`. Waypoints uses
+this to open `WaypointEditorScreen`, which is why the module can stay on (it is on by default)
+while you edit. The editor writes straight through `WaypointsModule` and saves the config on
+every change.
+
+## HUD elements
+
+Waypoints and Custom Crosshair have no mixin for drawing: each registers a Fabric HUD element
+from `VentiMod`.
+
+```java
+HudElementRegistry.addLast(Identifier.of("venti", "crosshair"), (context, tickCounter) -> {
+    CrosshairModule module = CrosshairModule.active();
+    if (module != null && MinecraftClient.getInstance().currentScreen == null) {
+        module.render(context);
     }
 });
 ```
 
 `HudElementRegistry` is the current API (`HudRenderCallback` is the deprecated one); `addLast`
-puts the element above vanilla's own HUD. The module projects each waypoint with the camera's
-yaw, pitch and FOV, and skips anything behind the camera, so nothing is drawn at a wrong place.
+puts the element above vanilla's own HUD. The waypoint element projects each point with the
+camera's yaw, pitch and FOV and skips anything behind the camera. The crosshair element is skipped
+while a screen is open, so it does not sit on top of menus.
+
+## Crosshair
+
+```java
+@Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
+```
+
+Vanilla's crosshair and its attack indicator are drawn by that one method, so cancelling it hides
+both and the module draws only the crosshair. Off means untouched.
 
 ## Registering modules
 
