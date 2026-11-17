@@ -4,6 +4,7 @@ import dev.venti.config.BooleanSetting;
 import dev.venti.config.ColorSetting;
 import dev.venti.config.NumberSetting;
 import dev.venti.config.StringListSetting;
+import dev.venti.gui.WaypointEditorScreen;
 import dev.venti.module.Module;
 import dev.venti.module.ModuleCategory;
 import dev.venti.module.Modules;
@@ -50,7 +51,8 @@ public final class WaypointsModule extends Module {
     private boolean wasDead;
 
     public WaypointsModule() {
-        super("waypoints", "Waypoints", "Saved places shown on screen with distance. Entries are \"Name x y z\", optionally ending in nether or end.", ModuleCategory.RENDER);
+        super("waypoints", "Waypoints", "Saved places shown on screen with distance. Entries are \"Name x y z\", optionally ending in nether or end.", ModuleCategory.RENDER, true);
+        this.setBindAction(this::openEditor);
         this.points.onChange(() -> this.parsed = null);
         this.deathMemory.visibleWhen(() -> this.deaths.get());
     }
@@ -58,6 +60,60 @@ public final class WaypointsModule extends Module {
     public static WaypointsModule active() {
         WaypointsModule module = Modules.get(WaypointsModule.class);
         return module != null && module.isEnabled() ? module : null;
+    }
+
+    /** The bind opens the editor instead of toggling, so the markers stay on while you edit. */
+    public void openEditor() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.world == null) {
+            return;
+        }
+        mc.setScreen(new WaypointEditorScreen(this));
+    }
+
+    public List<String> entries() {
+        return this.points.get();
+    }
+
+    public void removeEntry(int index) {
+        List<String> entries = this.points.get();
+        if (index < 0 || index >= entries.size()) {
+            return;
+        }
+        entries.remove(index);
+        this.points.edited();
+        this.parsed = null;
+        this.settings().save();
+    }
+
+    /** Saves the block you stand on, with a free name. Used by the editor's Add Here button. */
+    public void addHere() {
+        MinecraftClient mc = MinecraftClient.getInstance();
+        if (mc.player == null || mc.world == null) {
+            this.chat(net.minecraft.text.Text.literal("join a world first"));
+            return;
+        }
+        this.save(this.freeName(), mc.player.getBlockX(), mc.player.getBlockY(), mc.player.getBlockZ(),
+                mc.world.getRegistryKey());
+    }
+
+    private String freeName() {
+        List<Point> all = this.parsed();
+        int n = all.size() + 1;
+        while (true) {
+            String name = "Waypoint " + n;
+            boolean taken = false;
+            for (Point point : all) {
+                if (point.name().equalsIgnoreCase(name)) {
+                    taken = true;
+                    break;
+                }
+            }
+            if (!taken) {
+                return name;
+            }
+            n++;
+        }
     }
 
     @Override
