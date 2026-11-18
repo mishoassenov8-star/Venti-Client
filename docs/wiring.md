@@ -21,7 +21,16 @@ One config, `src/main/resources/venti.mixins.json`, registered from `fabric.mod.
     "GameRendererFovMixin",
     "LivingEntitySwingMixin",
     "BlockOverlayOutlineMixin",
-    "InGameHudCrosshairMixin"
+    "InGameHudCrosshairMixin",
+    "InGameOverlayRendererMixin",
+    "InGameHudOverlayMixin",
+    "WeatherRenderingMixin",
+    "LavaFogModifierMixin",
+    "BlindnessFogModifierMixin",
+    "DarknessFogModifierMixin",
+    "MobSpawnerRendererMixin",
+    "FallingBlockRendererMixin",
+    "EntityFireRenderStateMixin"
   ],
   "injectors": { "defaultRequire": 1 }
 }
@@ -39,11 +48,20 @@ Loom handles the annotation processor and the remap. **No refmap is needed**: du
 | `LivingEntitySwingMixin` | `class_1309`, method `method_6028` |
 | `BlockOverlayOutlineMixin` | `class_761`, method `method_62210`, rewriting args of `method_22712(Lnet/minecraft/class_4587;Lnet/minecraft/class_4588;DDDLnet/minecraft/class_12074;IF)V` |
 | `InGameHudCrosshairMixin` | `class_329`, method `method_1736` |
+| `InGameOverlayRendererMixin` | `class_4603`, methods `method_23070` and `method_70938` |
+| `InGameHudOverlayMixin` | `class_329`, methods `method_31977`, `method_61980` and `method_1746` |
+| `WeatherRenderingMixin` | `class_9976`, methods `method_62320` and `method_62319` |
+| `LavaFogModifierMixin` | `class_11401`, method `method_42593` |
+| `BlindnessFogModifierMixin` | `class_7283`, methods `method_42591` and `method_42592` |
+| `DarknessFogModifierMixin` | `class_7284`, methods `method_42591` and `method_42592` |
+| `MobSpawnerRendererMixin` | `class_839`, method `method_3589` |
+| `FallingBlockRendererMixin` | `class_901`, method `method_62436` |
+| `EntityFireRenderStateMixin` | `class_898`, method `method_72977` |
 
 Check it yourself with:
 
 ```bash
-javap -v -p -classpath build/libs/venti-client-0.10.0.jar dev.venti.mixin.FullbrightLightmapMixin \
+javap -v -p -classpath build/libs/venti-client-0.11.0.jar dev.venti.mixin.FullbrightLightmapMixin \
   | grep -E 'method=\[|value=\[|target=\['
 ```
 
@@ -133,31 +151,48 @@ every change.
 
 ## HUD elements
 
-Waypoints and Custom Crosshair have no mixin for drawing: each registers a Fabric HUD element
-from `VentiMod`.
+Waypoints has no mixin: it registers a Fabric HUD element from `VentiMod` instead.
 
 ```java
-HudElementRegistry.addLast(Identifier.of("venti", "crosshair"), (context, tickCounter) -> {
-    CrosshairModule module = CrosshairModule.active();
-    if (module != null && MinecraftClient.getInstance().currentScreen == null) {
-        module.render(context);
+HudElementRegistry.addLast(Identifier.of("venti", "waypoints"), (context, tickCounter) -> {
+    WaypointsModule module = WaypointsModule.active();
+    if (module != null) {
+        module.render(context, tickCounter);
     }
 });
 ```
 
 `HudElementRegistry` is the current API (`HudRenderCallback` is the deprecated one); `addLast`
-puts the element above vanilla's own HUD. The waypoint element projects each point with the
-camera's yaw, pitch and FOV and skips anything behind the camera. The crosshair element is skipped
-while a screen is open, so it does not sit on top of menus.
+puts the element above vanilla's own HUD. The module projects each waypoint with the camera's
+yaw, pitch and FOV, and skips anything behind the camera, so nothing is drawn at a wrong place.
 
-## Crosshair
+## No Render
 
-```java
-@Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-```
+No Render is a list of small removals rather than one hook, and every one of them answers a
+vanilla question with "no":
 
-Vanilla's crosshair and its attack indicator are drawn by that one method, so cancelling it hides
-both and the module draws only the crosshair. Off means untouched.
+| Toggle | Hook |
+| --- | --- |
+| Fire overlay | `InGameOverlayRenderer#renderFireOverlay`, cancelled |
+| Totem animation | `InGameOverlayRenderer#setFloatingItem`, cancelled before the float starts |
+| Pumpkin blur, powder snow | `InGameHud#renderOverlay`, cancelled only for textures whose path contains `pumpkin` or `powder_snow` |
+| Nausea, portal | `InGameHud#renderNauseaOverlay` / `#renderPortalOverlay`, cancelled |
+| Blindness, darkness | the effect fog modifier's `applyStartEndModifier` cancelled, `applyDarknessModifier` returning `1.0` |
+| Lava fog | `LavaFogModifier#shouldApply` returning `false` |
+| Spawner mob | `MobSpawnerBlockEntityRenderer#render`, cancelled |
+| Falling blocks | `FallingBlockEntityRenderer#shouldRender` returning `false` |
+| Weather | `WeatherRendering#renderPrecipitation` and `#addParticlesAndSound`, cancelled |
+| Entity fire | `EntityRenderManager#getAndUpdateRenderState`, clears `EntityRenderState#onFire` |
+
+1.21.11's fog is a set of modifier objects, which is why lava, blindness and darkness are three
+tiny hooks instead of one big one: `shouldApply` returning false leaves the camera's fog as it
+was. `applyDarknessModifier` is the extra dimming layer, and `1.0f` is the identity value — the
+base class returns its input unchanged when no effect is present.
+
+Two hooks use explicit descriptors (`method = "render(Lnet/minecraft/...;)V"`) because their
+target class has a bridge method with the same name. With `defaultRequire: 1`, getting that wrong
+would fail loudly at load rather than silently do nothing, but the descriptor still has to match
+exactly — check it with `javap -p -s` before changing one.
 
 ## Registering modules
 
