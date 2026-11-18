@@ -3,7 +3,7 @@
 Private workspace for Venti Client modules. Nothing in this repository is published.
 
 This is a **buildable Fabric mod**: the module/settings framework recovered from the shipped
-client, modules written for Venti, and seven mixins.
+client, modules written for Venti, and sixteen mixins.
 
 ## Build
 
@@ -19,7 +19,7 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew build
 
 Or skip the wrapper and run `gradle build` with a local Gradle 9.9.1.
 
-Output: `build/libs/venti-client-0.10.0.jar` (plus a sources jar).
+Output: `build/libs/venti-client-0.11.0.jar` (plus a sources jar).
 
 If your Gradle JVM is JDK 25 but the toolchain JDK 21 is installed somewhere unusual:
 
@@ -33,7 +33,8 @@ Don't want to build it yourself? Every version is tagged and has a release with 
 
 | Version | Jar | What it is |
 | --- | --- | --- |
-| v0.10.0 | `venti-client-0.10.0.jar` | latest — Custom Crosshair and the waypoint editor |
+| v0.11.0 | `venti-client-0.11.0.jar` | latest — No Render |
+| v0.10.0 | `venti-client-0.10.0.jar` | Custom Crosshair and the waypoint editor |
 | v0.9.0 | `venti-client-0.9.0.jar` | Waypoints |
 | v0.8.0 | `venti-client-0.8.0.jar` | Block Overlay |
 | v0.7.0 | `venti-client-0.7.0.jar` | Zoom, Custom FOV and Slow Swing |
@@ -88,10 +89,11 @@ Other modules:
 | Waypoints | Render | Entries are `Name x y z [nether\|end]`; each is projected onto the screen with its distance, fades out when you are close, and is skipped behind the camera. Nether/overworld entries are scaled by 8. Optional death waypoints. On by default; its bind opens the editor |
 | Waypoint Editor | Render | Screen opened from the Waypoints bind: one row per entry with Delete, Add Here for the block you stand on, and paging |
 | Custom Crosshair | Render | Replaces the vanilla crosshair: Cross, Dot or both, with colour, gap, length and thickness. Hides vanilla's crosshair and its attack indicator rather than drawing over them |
+| No Render | Render | Twelve separate toggles for things you would rather not see: fire overlay, totem animation, pumpkin blur, powder snow, nausea, portal tint, blindness and darkness fog, the mob spinning inside spawners, falling blocks, rain and snow, lava fog and fire on entities. Each one only removes a drawing pass — nothing is drawn over the world, and the server sees no difference |
 
 ## Mixins
 
-One config, seven mixins, `defaultRequire: 1` so a target that stops matching fails loudly:
+One config, sixteen mixins, `defaultRequire: 1` so a target that stops matching fails loudly:
 
 | Mixin | Target |
 | --- | --- |
@@ -102,26 +104,40 @@ One config, seven mixins, `defaultRequire: 1` so a target that stops matching fa
 | `LivingEntitySwingMixin` | `LivingEntity#getHandSwingDuration` — scales the local player's swing |
 | `BlockOverlayOutlineMixin` | `WorldRenderer#renderTargetBlockOutline` — rewrites the colour and width args of the normal `drawBlockOutline` call |
 | `InGameHudCrosshairMixin` | `InGameHud#renderCrosshair` — cancels vanilla's crosshair while Custom Crosshair draws its own |
+| `InGameOverlayRendererMixin` | `InGameOverlayRenderer#renderFireOverlay` and `#setFloatingItem` — fire overlay and totem pop animation |
+| `InGameHudOverlayMixin` | `InGameHud#renderOverlay`, `#renderNauseaOverlay`, `#renderPortalOverlay` — pumpkin blur, powder snow, nausea and portal tint |
+| `WeatherRenderingMixin` | `WeatherRendering#renderPrecipitation` and `#addParticlesAndSound` — rain and snow |
+| `LavaFogModifierMixin` | `LavaFogModifier#shouldApply` — declines the lava fog |
+| `BlindnessFogModifierMixin` | `BlindnessEffectFogModifier#applyStartEndModifier` and `#applyDarknessModifier` |
+| `DarknessFogModifierMixin` | `DarknessEffectFogModifier#applyStartEndModifier` and `#applyDarknessModifier` |
+| `MobSpawnerRendererMixin` | `MobSpawnerBlockEntityRenderer#render` — the mob spinning inside a spawner |
+| `FallingBlockRendererMixin` | `FallingBlockEntityRenderer#shouldRender` — falling sand, gravel and anvils |
+| `EntityFireRenderStateMixin` | `EntityRenderManager#getAndUpdateRenderState` — clears the `onFire` flag on render states |
 
 Loom remaps the annotations during `remapJar`, so **no refmap is needed**. Verified in the
 built jar: `class_897/method_3921`, `class_765/method_3313`,
 `class_638/method_29089` targeting `class_638$class_5271.method_165`, `class_757/method_3196`,
-`class_1309/method_6028`, `class_761/method_62210` calling `method_22712`, and
-`class_329/method_1736`. `docs/wiring.md` shows
+`class_1309/method_6028`, `class_761/method_62210` calling `method_22712`,
+`class_329/method_1736`, and the No Render set: `class_4603/method_23070`,
+`class_4603/method_70938`, `class_329/method_31977`, `class_329/method_61980`,
+`class_329/method_1746`, `class_9976/method_62320`, `class_9976/method_62319`,
+`class_11401/method_42593`, `class_7283/method_42591`, `class_7284/method_42591`,
+`class_839/method_3589`, `class_901/method_62436` and `class_898/method_72977`.
+`docs/wiring.md` shows
 the `javap` command to re-check and the recipe for adding another mixin.
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them, and adds the two HUD elements |
+| `src/main/java/dev/venti/VentiMod.java` | Client entrypoint: registers every module, starts/stops them with the client, ticks them |
 | `src/main/java/dev/venti/module/` | `Module`, `ModuleCategory`, `Modules` — the framework, reconstructed from the jar |
 | `src/main/java/dev/venti/config/` | All nine setting types plus `Settings` persistence |
-| `src/main/java/dev/venti/mixin/` | The seven mixins |
+| `src/main/java/dev/venti/mixin/` | The sixteen mixins |
 | `src/main/java/dev/venti/gui/` | `WaypointEditorScreen` |
 | `src/main/java/dev/venti/modules/` | `nametags`, `coords`, `health`, `weather`, `movement`, `misc`, `render` |
 | `.github/workflows/release-jars.yml` | Rebuilds each tag and attaches its jars to the release |
-| `docs/wiring.md` | Mixin setup, the nametag gate, bind actions, HUD elements, how to add a mixin |
+| `docs/wiring.md` | Mixin setup, the nametag gate, how to add a mixin |
 | `docs/recovered-api.md` | The framework API as it exists in the shipped jar |
 | `tools/intermediary_to_yarn.py` | The one-shot renamer used to convert the decompiled intermediary names to Yarn |
 
@@ -135,7 +151,7 @@ translates the exact set of members this code touches, and is safe to run again.
 
 ## Status
 
-`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and all seven mixins are
+`build` succeeds: `compileJava`, `jar` and `remapJar` all pass, and all sixteen mixins are
 remapped into the jar. None of it has been run in a Minecraft client yet.
 
 ## Deliberately not included
