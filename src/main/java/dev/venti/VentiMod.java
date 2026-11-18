@@ -11,6 +11,7 @@ import dev.venti.modules.render.BlockOverlayModule;
 import dev.venti.modules.render.CrosshairModule;
 import dev.venti.modules.render.CustomFovModule;
 import dev.venti.modules.render.FullbrightModule;
+import dev.venti.modules.render.NoRenderModule;
 import dev.venti.modules.render.TimeChangerModule;
 import dev.venti.modules.render.WaypointsModule;
 import dev.venti.modules.render.ZoomModule;
@@ -40,6 +41,7 @@ public final class VentiMod implements ClientModInitializer {
         Modules.register(new BlockOverlayModule());
         Modules.register(new WaypointsModule());
         Modules.register(new CrosshairModule());
+        Modules.register(new NoRenderModule());
 
         HudElementRegistry.addLast(Identifier.of("venti", "waypoints"), (context, tickCounter) -> {
             WaypointsModule module = WaypointsModule.active();
