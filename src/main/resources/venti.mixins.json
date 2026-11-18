@@ -10,7 +10,16 @@
     "GameRendererFovMixin",
     "LivingEntitySwingMixin",
     "BlockOverlayOutlineMixin",
-    "InGameHudCrosshairMixin"
+    "InGameHudCrosshairMixin",
+    "InGameOverlayRendererMixin",
+    "InGameHudOverlayMixin",
+    "WeatherRenderingMixin",
+    "LavaFogModifierMixin",
+    "BlindnessFogModifierMixin",
+    "DarknessFogModifierMixin",
+    "MobSpawnerRendererMixin",
+    "FallingBlockRendererMixin",
+    "EntityFireRenderStateMixin"
   ],
   "injectors": {
     "defaultRequire": 1
